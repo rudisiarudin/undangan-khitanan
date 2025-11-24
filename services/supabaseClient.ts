@@ -12,6 +12,6 @@ const supabaseUrl = process.env.SUPABASE_URL ||
 const supabaseKey = process.env.SUPABASE_KEY || 
                     process.env.REACT_APP_SUPABASE_KEY || 
                     process.env.VITE_SUPABASE_KEY || 
-                    'sb_secret_MKfeU_b0jT2zCLKkNhLffw_CNE2t-IY';
+                    'sb_publishable_oRdZ9OqUOQNAX0DAi--9HA_0WxDoq8G';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);

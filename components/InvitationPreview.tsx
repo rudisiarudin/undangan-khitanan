@@ -293,8 +293,15 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
         time: 'Baru saja'
       }, ...prev]);
 
-      // Reset
+      // Reset form
       setNewCommentMsg(''); 
+      // Do not reset name if it is custom guest
+      if (!isCustomGuest) {
+          // Optional: clear name if desired, but user might want to send another. 
+          // keeping it for now, or clearing it. Let's clear it to be clean.
+          setNewCommentName('');
+      }
+      
       setShowCommentModal(false);
       setIsSubmittingComment(false);
       alert("Ucapan berhasil dikirim!");
