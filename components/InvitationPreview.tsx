@@ -431,7 +431,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
       </div>
 
       {/* Navbar Bottom (Mobile Style) */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-java-dark/95 backdrop-blur-md text-java-gold px-6 md:px-8 py-3 md:py-4 rounded-full shadow-2xl flex gap-6 md:gap-8 border border-java-gold/30">
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-br from-java-dark/70 to-black/70 backdrop-blur-xl text-java-gold px-6 md:px-8 py-3 md:py-4 rounded-full shadow-2xl flex gap-6 md:gap-8 border border-white/10">
         <button onClick={() => scrollToSection('section-home')} className="hover:text-white transition-colors hover:scale-110"><Home size={20} className="md:w-6 md:h-6"/></button>
         <button onClick={() => scrollToSection('section-couple')} className="hover:text-white transition-colors hover:scale-110"><User size={20} className="md:w-6 md:h-6"/></button>
         <button onClick={() => scrollToSection('section-event')} className="hover:text-white transition-colors hover:scale-110"><Calendar size={20} className="md:w-6 md:h-6"/></button>
@@ -873,7 +873,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="py-10 md:py-12 bg-java-dark text-center text-gray-400 text-xs font-sans border-t border-white/10">
+      <footer className="pt-10 pb-32 md:pt-12 md:pb-32 bg-java-dark text-center text-gray-400 text-xs font-sans border-t border-white/10">
          <div className="mb-4 opacity-50 flex justify-center">
             <img src={JAVA_GUNUNGAN_URL} alt="Gunungan" className="h-10 md:h-14 grayscale opacity-60" />
          </div>
