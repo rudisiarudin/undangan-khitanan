@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CoupleData, GeneratedContent } from '../types';
 import { BatikDivider } from './Ornament';
-import { MapPin, Calendar, Heart, Music, Pause, Gift, Home, User, MessageCircle, Copy, Check, X, Send, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Calendar, Heart, Music, Pause, Gift, Home, User, MessageCircle, Copy, Check, X, Send, Clock, ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 
 const JAVA_GUNUNGAN_URL = "https://i.pinimg.com/originals/fa/31/d7/fa31d7c7845aa910ec6aed6a46f97387.png";
@@ -29,6 +29,10 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   
   // Guest Name State
   const [guestName, setGuestName] = useState<string>('');
+  const [isCustomGuest, setIsCustomGuest] = useState(false);
+
+  // Fullscreen State
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Countdown State
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -152,10 +156,48 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
     const name = params.get('to') || params.get('guest') || params.get('u') || params.get('kpd');
     if (name) {
       setGuestName(name);
+      setIsCustomGuest(true);
+      // Auto-fill the comment name if it's a custom link
+      setNewCommentName(name);
     } else {
       setGuestName('Tamu Undangan');
+      setIsCustomGuest(false);
     }
   }, []);
+
+  // Check Fullscreen State changes from browser controls
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((e) => {
+            console.error(`Error attempting to enable fullscreen: ${e.message}`);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+  };
+
+  const handleOpenInvitation = () => {
+    setIsOpen(true);
+    // Auto enter fullscreen on mobile devices to enhance experience
+    // Check if it is a touch device or small screen
+    if (window.innerWidth < 768) { 
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {
+                // Ignore errors if fullscreen is blocked or not supported
+            });
+        }
+    }
+  };
 
   // Play audio when modal opens
   useEffect(() => {
@@ -223,8 +265,23 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  const handleCommentClick = () => {
+      if (isCustomGuest) {
+          setShowCommentModal(true);
+      } else {
+          alert("Maaf, fitur ucapan hanya tersedia untuk tamu dengan undangan khusus (tautan pribadi).");
+      }
+  };
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Security check on submit as well
+    if (!isCustomGuest) {
+        alert("Akses ditolak. Gunakan link undangan resmi.");
+        return;
+    }
+
     if (newCommentName && newCommentMsg && !isSubmittingComment) {
       setIsSubmittingComment(true);
       
@@ -236,8 +293,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
         if (error) throw error;
 
         // If successful, reset form and close
-        setNewCommentName('');
-        setNewCommentMsg('');
+        setNewCommentMsg(''); // Keep name if they want to post again? Or clear it. Usually clear msg only is better UX but protecting name is good.
         setShowCommentModal(false);
       } catch (err) {
         console.error("Error submitting comment:", err);
@@ -338,7 +394,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
            </div>
            
            <button 
-             onClick={() => setIsOpen(true)}
+             onClick={handleOpenInvitation}
              className="bg-java-gold hover:bg-java-gold-dark text-white font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center gap-3 mx-auto tracking-wide text-sm font-sans"
            >
              <MessageCircle size={18} />
@@ -354,8 +410,18 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
       {/* Audio Element - Improved Archive.org Link */}
       <audio ref={audioRef} loop src="https://narendra.itpalugada.com/wp-content/uploads/2025/11/Gending-Temanten-Adat-Jawa-kebo-giro.mp3" />
       
-      {/* Floating Music Control */}
-      <div className="fixed bottom-24 left-6 z-40 md:bottom-6">
+      {/* Floating Controls (Music + Fullscreen) */}
+      <div className="fixed bottom-24 left-6 z-40 md:bottom-6 flex flex-col gap-3">
+        {/* Fullscreen Toggle */}
+        <button
+            onClick={toggleFullscreen}
+            className="bg-java-dark/80 text-java-gold p-3 rounded-full shadow-lg hover:bg-java-dark transition-all border border-java-gold/30 backdrop-blur-sm"
+            title="Toggle Fullscreen"
+        >
+            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+        </button>
+
+        {/* Music Toggle */}
         <button 
           onClick={toggleAudio}
           className="bg-java-gold text-white p-3 rounded-full shadow-lg hover:bg-java-gold-dark transition-all animate-spin-slow border-2 border-white"
@@ -785,10 +851,10 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
 
            <div className="text-center">
               <button 
-                onClick={() => setShowCommentModal(true)}
-                className="bg-java-gold text-java-dark font-bold py-3 md:py-4 px-8 md:px-10 rounded-full hover:bg-white transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center gap-2 mx-auto text-sm md:text-base"
+                onClick={handleCommentClick}
+                className={`${isCustomGuest ? 'bg-java-gold hover:bg-white' : 'bg-gray-600 cursor-not-allowed opacity-70'} text-java-dark font-bold py-3 md:py-4 px-8 md:px-10 rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center gap-2 mx-auto text-sm md:text-base`}
               >
-                 <MessageCircle size={18} className="md:w-5 md:h-5" /> Kirim Ucapan
+                 <MessageCircle size={18} className="md:w-5 md:h-5" /> {isCustomGuest ? 'Kirim Ucapan' : 'Khusus Tamu Undangan'}
               </button>
            </div>
         </div>
@@ -841,11 +907,10 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                     <input 
                       type="text" 
                       value={newCommentName}
-                      onChange={(e) => setNewCommentName(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-java-gold focus:border-transparent outline-none transition-all font-sans"
-                      placeholder="Nama Anda"
-                      required
+                      readOnly={true}
+                      className="w-full bg-gray-200 text-gray-600 border border-gray-200 rounded-lg px-4 py-3 focus:outline-none transition-all font-sans cursor-not-allowed"
                     />
+                    <p className="text-[10px] text-gray-500 mt-1 italic">*Nama sesuai undangan</p>
                  </div>
                  <div>
                     <label className="block text-xs font-bold text-java-brown mb-2 uppercase tracking-wider">Ucapan</label>
