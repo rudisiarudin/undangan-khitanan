@@ -157,11 +157,12 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
     if (name) {
       setGuestName(name);
       setIsCustomGuest(true);
-      // Auto-fill the comment name if it's a custom link
+      // Auto-fill the comment name if it's a custom link so they just fill the message
       setNewCommentName(name);
     } else {
       setGuestName('Tamu Undangan');
       setIsCustomGuest(false);
+      setNewCommentName('');
     }
   }, []);
 
@@ -189,7 +190,6 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   const handleOpenInvitation = () => {
     setIsOpen(true);
     // Auto enter fullscreen on mobile devices to enhance experience
-    // Check if it is a touch device or small screen
     if (window.innerWidth < 768) { 
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(() => {
@@ -214,8 +214,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
       // Parse time from weddingTime string (e.g., "16.00 WIB" -> "16:00")
       const timeString = data.weddingTime ? data.weddingTime.replace('.', ':').split(' ')[0] : '08:00';
       
-      // Assume WIB (UTC+7) for valid count down if user is in different zone, or just use local simple parse
-      // For simplicity and robustness in this demo, we use ISO format with offset +07:00
+      // Assume WIB (UTC+7) for valid count down
       const eventDateStr = `${data.weddingDate}T${timeString}:00+07:00`;
       const eventDate = new Date(eventDateStr);
       const now = new Date();
@@ -269,6 +268,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
       if (isCustomGuest) {
           setShowCommentModal(true);
       } else {
+          // Fallback warning if button is clicked (though it should be visually disabled)
           alert("Maaf, fitur ucapan hanya tersedia untuk tamu dengan undangan khusus (tautan pribadi).");
       }
   };
@@ -276,7 +276,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Security check on submit as well
+    // Security check on submit
     if (!isCustomGuest) {
         alert("Akses ditolak. Gunakan link undangan resmi.");
         return;
@@ -292,8 +292,8 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
 
         if (error) throw error;
 
-        // If successful, reset form and close
-        setNewCommentMsg(''); // Keep name if they want to post again? Or clear it. Usually clear msg only is better UX but protecting name is good.
+        // If successful, reset msg and close (Name stays filled)
+        setNewCommentMsg(''); 
         setShowCommentModal(false);
       } catch (err) {
         console.error("Error submitting comment:", err);
@@ -320,7 +320,6 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
         const startTime = performance.now();
         const duration = 1200; // ms duration for elegance
 
-        // Quintic easing for very smooth start/stop
         const easeInOutQuint = (t: number) => t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
 
         const animate = (currentTime: number) => {
@@ -431,7 +430,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
         </button>
       </div>
 
-      {/* Navbar Bottom (Mobile Style) - Updated with Smooth Scroll */}
+      {/* Navbar Bottom (Mobile Style) */}
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-java-dark/95 backdrop-blur-md text-java-gold px-6 md:px-8 py-3 md:py-4 rounded-full shadow-2xl flex gap-6 md:gap-8 border border-java-gold/30">
         <button onClick={() => scrollToSection('section-home')} className="hover:text-white transition-colors hover:scale-110"><Home size={20} className="md:w-6 md:h-6"/></button>
         <button onClick={() => scrollToSection('section-couple')} className="hover:text-white transition-colors hover:scale-110"><User size={20} className="md:w-6 md:h-6"/></button>
@@ -852,6 +851,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
            <div className="text-center">
               <button 
                 onClick={handleCommentClick}
+                disabled={!isCustomGuest}
                 className={`${isCustomGuest ? 'bg-java-gold hover:bg-white' : 'bg-gray-600 cursor-not-allowed opacity-70'} text-java-dark font-bold py-3 md:py-4 px-8 md:px-10 rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center gap-2 mx-auto text-sm md:text-base`}
               >
                  <MessageCircle size={18} className="md:w-5 md:h-5" /> {isCustomGuest ? 'Kirim Ucapan' : 'Khusus Tamu Undangan'}
@@ -877,7 +877,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
          <div className="mb-4 opacity-50 flex justify-center">
             <img src={JAVA_GUNUNGAN_URL} alt="Gunungan" className="h-10 md:h-14 grayscale opacity-60" />
          </div>
-         <p className="mb-2 tracking-widest uppercase">Created By IT PALUGADA</p>
+         <p className="mb-2 tracking-widest uppercase">Created By <span className="font-bold text-java-gold">IT PALUGADA</span></p>
          <p>&copy; 2024 Undangan Digital Jawa</p>
       </footer>
 
@@ -908,7 +908,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                       type="text" 
                       value={newCommentName}
                       readOnly={true}
-                      className="w-full bg-gray-200 text-gray-600 border border-gray-200 rounded-lg px-4 py-3 focus:outline-none transition-all font-sans cursor-not-allowed"
+                      className="w-full bg-gray-200 text-gray-600 border border-gray-200 rounded-lg px-4 py-3 focus:outline-none transition-all font-sans cursor-not-allowed font-bold"
                     />
                     <p className="text-[10px] text-gray-500 mt-1 italic">*Nama sesuai undangan</p>
                  </div>
