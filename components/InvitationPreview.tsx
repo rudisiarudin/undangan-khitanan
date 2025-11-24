@@ -878,7 +878,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
             <img src={JAVA_GUNUNGAN_URL} alt="Gunungan" className="h-10 md:h-14 grayscale opacity-60" />
          </div>
          <p className="mb-2 tracking-widest uppercase">Created By <span className="font-bold text-java-gold">IT PALUGADA</span></p>
-         <p>&copy; 2024 Undangan Digital Jawa</p>
+         <p>&copy; 2025 Undangan Digital </p>
       </footer>
 
       {/* --- MODALS --- */}
