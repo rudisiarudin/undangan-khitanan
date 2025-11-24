@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CoupleData, GeneratedContent } from '../types';
 import { BatikDivider } from './Ornament';
-import { MapPin, Calendar, Heart, Music, Pause, Gift, Home, User, MessageCircle, Copy, Check, X, Send, Clock, ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react';
+import { MapPin, Calendar, Heart, Music, Pause, Gift, Home, User, MessageCircle, Copy, Check, X, Send, Clock, ChevronLeft, ChevronRight, Maximize, Minimize, CheckCircle } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 
 const JAVA_GUNUNGAN_URL = "https://i.pinimg.com/originals/fa/31/d7/fa31d7c7845aa910ec6aed6a46f97387.png";
@@ -49,6 +49,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   const [newCommentMsg, setNewCommentMsg] = useState('');
   const [comments, setComments] = useState<CommentData[]>([]);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Section Refs for scrolling
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -265,6 +266,10 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   };
 
   const handleCommentClick = () => {
+      setIsSuccess(false);
+      // Clean up message, keep name if custom
+      setNewCommentMsg('');
+      if (!isCustomGuest) setNewCommentName('');
       setShowCommentModal(true);
   };
 
@@ -293,18 +298,13 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
         time: 'Baru saja'
       }, ...prev]);
 
-      // Reset form
+      // Do NOT reset form immediately if you want to keep data for a bit, 
+      // but here we are showing a success screen so we can clear msg.
       setNewCommentMsg(''); 
-      // Do not reset name if it is custom guest
-      if (!isCustomGuest) {
-          // Optional: clear name if desired, but user might want to send another. 
-          // keeping it for now, or clearing it. Let's clear it to be clean.
-          setNewCommentName('');
-      }
+      if (!isCustomGuest) setNewCommentName('');
       
-      setShowCommentModal(false);
       setIsSubmittingComment(false);
-      alert("Ucapan berhasil dikirim!");
+      setIsSuccess(true);
     }
   };
 
@@ -900,38 +900,57 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
       {showCommentModal && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md">
            <div className="bg-white rounded-2xl w-full max-w-md p-6 md:p-8 relative animate-fade-in-up shadow-2xl">
-              <button onClick={() => setShowCommentModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+              <button onClick={() => setShowCommentModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-50">
                  <X size={24} />
               </button>
-              <h3 className="text-xl md:text-2xl font-bold font-display text-java-dark mb-4 md:mb-6 border-b pb-4">Kirim Ucapan</h3>
-              <form onSubmit={handleCommentSubmit} className="space-y-4 md:space-y-5">
-                 <div>
-                    <label className="block text-xs font-bold text-java-brown mb-2 uppercase tracking-wider">Nama</label>
-                    <input 
-                      type="text" 
-                      value={newCommentName}
-                      onChange={(e) => !isCustomGuest && setNewCommentName(e.target.value)}
-                      readOnly={isCustomGuest}
-                      className={`w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none transition-all font-sans font-bold ${isCustomGuest ? 'bg-gray-200 text-gray-600 cursor-not-allowed' : 'bg-gray-50 text-gray-800 focus:ring-2 focus:ring-java-gold'}`}
-                      placeholder={!isCustomGuest ? "Tulis nama anda..." : ""}
-                      required
-                    />
-                    {isCustomGuest && <p className="text-[10px] text-gray-500 mt-1 italic">*Nama sesuai undangan</p>}
-                 </div>
-                 <div>
-                    <label className="block text-xs font-bold text-java-brown mb-2 uppercase tracking-wider">Ucapan</label>
-                    <textarea 
-                      value={newCommentMsg}
-                      onChange={(e) => setNewCommentMsg(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-java-gold focus:border-transparent outline-none h-24 md:h-32 resize-none transition-all font-sans"
-                      placeholder="Tuliskan doa dan harapan..."
-                      required
-                    />
-                 </div>
-                 <button type="submit" disabled={isSubmittingComment} className="w-full bg-java-dark text-white font-bold py-3 md:py-4 rounded-xl hover:bg-java-gold hover:text-java-dark transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50">
-                    <Send size={18} /> {isSubmittingComment ? 'MENGIRIM...' : 'KIRIM'}
-                 </button>
-              </form>
+              
+              {isSuccess ? (
+                <div className="flex flex-col items-center justify-center py-8 animate-fade-in-up">
+                    <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
+                        <CheckCircle size={48} className="text-green-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold font-display text-java-dark mb-2">Terima Kasih!</h3>
+                    <p className="text-gray-500 text-center mb-8">Ucapan dan doa restu Anda telah berhasil kami terima.</p>
+                    <button 
+                        onClick={() => setShowCommentModal(false)}
+                        className="bg-java-dark text-white font-bold py-3 px-10 rounded-xl hover:bg-java-gold hover:text-java-dark transition-all shadow-lg"
+                    >
+                        Tutup
+                    </button>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-xl md:text-2xl font-bold font-display text-java-dark mb-4 md:mb-6 border-b pb-4">Kirim Ucapan</h3>
+                  <form onSubmit={handleCommentSubmit} className="space-y-4 md:space-y-5">
+                     <div>
+                        <label className="block text-xs font-bold text-java-brown mb-2 uppercase tracking-wider">Nama</label>
+                        <input 
+                          type="text" 
+                          value={newCommentName}
+                          onChange={(e) => !isCustomGuest && setNewCommentName(e.target.value)}
+                          readOnly={isCustomGuest}
+                          className={`w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none transition-all font-sans font-bold ${isCustomGuest ? 'bg-gray-200 text-gray-600 cursor-not-allowed' : 'bg-gray-50 text-gray-800 focus:ring-2 focus:ring-java-gold'}`}
+                          placeholder={!isCustomGuest ? "Tulis nama anda..." : ""}
+                          required
+                        />
+                        {isCustomGuest && <p className="text-[10px] text-gray-500 mt-1 italic">*Nama sesuai undangan</p>}
+                     </div>
+                     <div>
+                        <label className="block text-xs font-bold text-java-brown mb-2 uppercase tracking-wider">Ucapan</label>
+                        <textarea 
+                          value={newCommentMsg}
+                          onChange={(e) => setNewCommentMsg(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-java-gold focus:border-transparent outline-none h-24 md:h-32 resize-none transition-all font-sans"
+                          placeholder="Tuliskan doa dan harapan..."
+                          required
+                        />
+                     </div>
+                     <button type="submit" disabled={isSubmittingComment} className="w-full bg-java-dark text-white font-bold py-3 md:py-4 rounded-xl hover:bg-java-gold hover:text-java-dark transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50">
+                        <Send size={18} /> {isSubmittingComment ? 'MENGIRIM...' : 'KIRIM'}
+                     </button>
+                  </form>
+                </>
+              )}
            </div>
         </div>
       )}
