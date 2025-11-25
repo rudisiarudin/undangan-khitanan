@@ -24,7 +24,7 @@ function App() {
     secondEventDate: '2025-12-21',
     secondEventTime: '10.00 WIB',
     
-    locationName: 'Kediaman Mempelai',
+    locationName: 'Kediaman Keluarga',
     locationAddress: 'Jl. Pondok Asri Utara I No. 83, RT 04 RW 10 Pondok Gedangasri, Gedanganak, Ungaran',
     
     coverPhoto: 'https://images.unsplash.com/photo-1604866830893-c13cafa515d5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80', 
