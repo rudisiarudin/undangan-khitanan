@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CoupleData, GeneratedContent } from '../types';
-import { BatikDivider } from './Ornament';
+import { BatikDivider, MandalaFlower, FloralDivider } from './Ornament';
 import { MapPin, Calendar, Heart, Music, Pause, Gift, Home, User, MessageCircle, Copy, Check, X, Send, Clock, ChevronLeft, ChevronRight, Maximize, Minimize, CheckCircle } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 
 const JAVA_GUNUNGAN_URL = "https://i.pinimg.com/originals/fa/31/d7/fa31d7c7845aa910ec6aed6a46f97387.png";
-const LINE_ORNAMENT_URL = "https://lottie.host/3154f9d8-a4ce-489b-b0de-08becb1486f8/26TNw6VVFY.lottie";
-const LOTTIE_SPINNING_FLOWER = "https://lottie.host/491d953d-27d6-4e58-9669-7682d338f9a3/WJ4u2t9aFp.lottie"; // Gold Mandala
-const LOTTIE_FLOATING_LEAVES = "https://lottie.host/5753b27b-2c5e-442a-a53d-88b9c719543e/M8X6X8qgq7.lottie"; // Golden Particles/Leaves
 
 interface InvitationPreviewProps {
   data: CoupleData;
@@ -50,6 +47,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   const [comments, setComments] = useState<CommentData[]>([]);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [existingCommentId, setExistingCommentId] = useState<number | null>(null);
 
   // Section Refs for scrolling
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -84,7 +82,6 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   
   const coupleSectionTitle = isKhitanan ? "Putra Kami" : "Mempelai";
   
-  const displayCover = coverPhoto || "https://images.unsplash.com/photo-1583939003579-730e3918a45a?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80";
   const displayCouple = couplePhoto || (isKhitanan 
       ? "https://images.unsplash.com/photo-1516575150278-77136aed6920?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" // Boy image
       : "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"); // Couple image
@@ -265,11 +262,32 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const handleCommentClick = () => {
+  const handleCommentClick = async () => {
       setIsSuccess(false);
-      // Clean up message, keep name if custom
       setNewCommentMsg('');
-      if (!isCustomGuest) setNewCommentName('');
+      setExistingCommentId(null);
+
+      if (isCustomGuest && guestName) {
+          setNewCommentName(guestName);
+          // Check for existing comment
+          try {
+              const { data, error } = await supabase
+                  .from('comments')
+                  .select('id, message')
+                  .eq('name', guestName)
+                  .single();
+              
+              if (data && !error) {
+                  setExistingCommentId(data.id);
+                  setNewCommentMsg(data.message);
+              }
+          } catch (err) {
+              console.warn("Could not check existing comment:", err);
+          }
+      } else {
+          setNewCommentName('');
+      }
+      
       setShowCommentModal(true);
   };
 
@@ -279,11 +297,22 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
     if (newCommentName && newCommentMsg && !isSubmittingComment) {
       setIsSubmittingComment(true);
       
-      // Attempt to save to Supabase
       try {
-        const { error } = await supabase
-            .from('comments')
-            .insert([{ name: newCommentName, message: newCommentMsg }]);
+        let error;
+        if (existingCommentId) {
+            // Update existing comment
+            const res = await supabase
+                .from('comments')
+                .update({ message: newCommentMsg })
+                .eq('id', existingCommentId);
+            error = res.error;
+        } else {
+            // Insert new comment
+            const res = await supabase
+                .from('comments')
+                .insert([{ name: newCommentName, message: newCommentMsg }]);
+            error = res.error;
+        }
 
         if (error) {
           console.error("SUPABASE ERROR:", error);
@@ -294,15 +323,20 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
         }
       } catch (err) {
         console.warn("Backend insert failed, switching to local demo mode:", err);
-        // We continue to update local state anyway to satisfy the user testing
+        // Continue to update local state anyway to satisfy the user testing
       }
 
-      // Optimistic update / Local Fallback
-      setComments(prev => [{
-        name: newCommentName,
-        msg: newCommentMsg,
-        time: 'Baru saja'
-      }, ...prev]);
+      // Optimistic update
+      if (!existingCommentId) {
+          setComments(prev => [{
+            name: newCommentName,
+            msg: newCommentMsg,
+            time: 'Baru saja'
+          }, ...prev]);
+      } else {
+          // If updated, we should ideally refresh list or update item, but for now simple append works for visual feedback
+           setComments(prev => prev.map(c => c.name === newCommentName ? { ...c, msg: newCommentMsg, time: 'Diedit barusan' } : c));
+      }
 
       // Do NOT reset form immediately if you want to keep data for a bit, 
       // but here we are showing a success screen so we can clear msg.
@@ -355,6 +389,39 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
     return null;
   };
 
+  // Navbar logic
+  const [activeSection, setActiveSection] = useState('section-home');
+  const navItems = [
+    { id: 'section-home', icon: <Home size={20} />, label: 'Home' },
+    { id: 'section-couple', icon: isKhitanan ? <User size={20} /> : <Heart size={20} />, label: isKhitanan ? 'Putra' : 'Couple' },
+    { id: 'section-event', icon: <Calendar size={20} />, label: 'Event' },
+    { id: 'section-wishes', icon: <MessageCircle size={20} />, label: 'Wishes' },
+  ];
+
+  // Add intersection observer to update activeSection
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                setActiveSection(entry.target.id);
+            }
+        });
+    }, {
+        root: container,
+        threshold: 0.5
+    });
+
+    navItems.forEach(item => {
+        const el = document.getElementById(item.id);
+        if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   if (!isOpen) {
     return (
       <div 
@@ -364,22 +431,14 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
         <div className="absolute inset-0 z-0 bg-java-dark/90">
         </div>
 
-        {/* Animated Background Ornaments (Lottie) */}
-        <div className="absolute top-[-15%] left-[-15%] w-[80%] md:w-[60%] opacity-30 pointer-events-none z-10 animate-spin-slow">
-            {/* @ts-ignore */}
-            <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="0.5" loop autoplay></dotlottie-player>
+        {/* SVG Background Ornaments */}
+        <div className="absolute top-[-15%] left-[-15%] w-[80%] md:w-[60%] opacity-30 pointer-events-none z-10">
+            <MandalaFlower className="w-full h-full text-java-gold animate-spin-slow" />
         </div>
-        <div className="absolute bottom-[-15%] right-[-15%] w-[80%] md:w-[60%] opacity-30 pointer-events-none z-10 animate-spin-slow-reverse">
-             {/* @ts-ignore */}
-             <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="0.5" loop autoplay></dotlottie-player>
+        <div className="absolute bottom-[-15%] right-[-15%] w-[80%] md:w-[60%] opacity-30 pointer-events-none z-10">
+             <MandalaFlower className="w-full h-full text-java-gold animate-spin-slow-reverse" />
         </div>
         
-        {/* Floating Leaves */}
-        <div className="absolute inset-0 z-10 opacity-20 pointer-events-none">
-             {/* @ts-ignore */}
-             <dotlottie-player src={LOTTIE_FLOATING_LEAVES} background="transparent" speed="0.8" loop autoplay></dotlottie-player>
-        </div>
-
         <div className="relative z-20 text-center p-6 md:p-8 max-w-lg w-full animate-fade-in-up border border-java-gold/30 bg-java-dark/40 backdrop-blur-sm rounded-3xl m-4 shadow-2xl">
            <div className="mb-6 md:mb-8 flex justify-center">
               <img src={JAVA_GUNUNGAN_URL} alt="Gunungan" className="h-36 md:h-52 w-auto object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] animate-fade-in-up" />
@@ -440,12 +499,27 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
         </button>
       </div>
 
-      {/* Navbar Bottom (Mobile Style) */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-br from-java-dark/70 to-black/70 backdrop-blur-xl text-java-gold px-6 md:px-8 py-3 md:py-4 rounded-full shadow-2xl flex gap-6 md:gap-8 border border-white/10">
-        <button onClick={() => scrollToSection('section-home')} className="hover:text-white transition-colors hover:scale-110"><Home size={20} className="md:w-6 md:h-6"/></button>
-        <button onClick={() => scrollToSection('section-couple')} className="hover:text-white transition-colors hover:scale-110"><User size={20} className="md:w-6 md:h-6"/></button>
-        <button onClick={() => scrollToSection('section-event')} className="hover:text-white transition-colors hover:scale-110"><Calendar size={20} className="md:w-6 md:h-6"/></button>
-        <button onClick={() => scrollToSection('section-wishes')} className="hover:text-white transition-colors hover:scale-110"><MessageCircle size={20} className="md:w-6 md:h-6"/></button>
+      {/* Expanding Pill Navbar */}
+      <div className="fixed bottom-4 md:bottom-8 inset-x-0 mx-auto w-fit z-40 bg-white/90 backdrop-blur-xl border border-java-gold/20 p-1.5 rounded-full shadow-2xl flex gap-1 md:gap-2 items-center">
+        {navItems.map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+                <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className={`relative flex items-center justify-center rounded-full transition-all duration-500 ease-in-out overflow-hidden ${
+                        isActive 
+                        ? 'bg-java-dark text-white px-4 md:px-5 py-2 md:py-3 w-auto' 
+                        : 'bg-transparent text-java-brown hover:bg-gray-100 w-10 h-10 md:w-12 md:h-12'
+                    }`}
+                >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    <span className={`whitespace-nowrap font-sans font-semibold text-xs md:text-sm ml-2 transition-all duration-300 ${isActive ? 'opacity-100 max-w-[100px]' : 'opacity-0 max-w-0 hidden'}`}>
+                        {item.label}
+                    </span>
+                </button>
+            );
+        })}
       </div>
 
       {/* --- HERO SECTION --- */}
@@ -453,20 +527,12 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
          {/* Overlay to ensure text readability on batik */}
         <div className="absolute inset-0 bg-java-dark/85"></div>
 
-        {/* Lottie Ornaments (Top Corners) */}
-        <div className="absolute top-[-50px] left-[-50px] w-48 h-48 md:w-80 md:h-80 opacity-40 z-10 animate-spin-slow pointer-events-none">
-             {/* @ts-ignore */}
-             <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="0.5" loop autoplay></dotlottie-player>
+        {/* SVG Ornaments (Top Corners) */}
+        <div className="absolute top-[-50px] left-[-50px] w-48 h-48 md:w-80 md:h-80 opacity-40 z-10 pointer-events-none">
+             <MandalaFlower className="w-full h-full text-java-gold animate-spin-slow" />
         </div>
-        <div className="absolute top-[-50px] right-[-50px] w-48 h-48 md:w-80 md:h-80 opacity-40 z-10 transform scale-x-[-1] animate-spin-slow pointer-events-none">
-             {/* @ts-ignore */}
-             <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="0.5" loop autoplay></dotlottie-player>
-        </div>
-
-        {/* Floating Leaves Background */}
-        <div className="absolute inset-0 w-full h-full opacity-30 z-0 pointer-events-none">
-             {/* @ts-ignore */}
-             <dotlottie-player src={LOTTIE_FLOATING_LEAVES} background="transparent" speed="0.8" loop autoplay></dotlottie-player>
+        <div className="absolute top-[-50px] right-[-50px] w-48 h-48 md:w-80 md:h-80 opacity-40 z-10 transform scale-x-[-1] pointer-events-none">
+             <MandalaFlower className="w-full h-full text-java-gold animate-spin-slow-reverse" />
         </div>
 
         {/* Content */}
@@ -505,21 +571,18 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
             "{aiContent?.quote || "Mugi-mugi Gusti Allah tansah paring berkah..."}"
           </p>
           
-          {/* Lottie Divider */}
-          <div className="w-full max-w-xs mx-auto h-16 opacity-80 animate-fade-in-up">
-              {/* @ts-ignore */}
-              <dotlottie-player src={LINE_ORNAMENT_URL} background="transparent" speed="1" loop autoplay></dotlottie-player>
+          {/* Divider */}
+          <div className="w-full max-w-xs mx-auto opacity-80 animate-fade-in-up flex justify-center">
+              <BatikDivider className="h-8 text-java-gold" />
           </div>
         </div>
         
-        {/* Lottie Background Ornaments */}
-        <div className="absolute top-10 left-[-50px] w-64 h-64 opacity-10 text-java-dark pointer-events-none animate-spin-slow">
-            {/* @ts-ignore */}
-            <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="0.3" loop autoplay></dotlottie-player>
+        {/* Background Ornaments */}
+        <div className="absolute top-10 left-[-50px] w-64 h-64 opacity-10 text-java-dark pointer-events-none">
+            <MandalaFlower className="w-full h-full animate-spin-slow" />
         </div>
-        <div className="absolute bottom-10 right-[-50px] w-64 h-64 opacity-10 text-java-dark pointer-events-none animate-spin-slow-reverse">
-             {/* @ts-ignore */}
-            <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="0.3" loop autoplay></dotlottie-player>
+        <div className="absolute bottom-10 right-[-50px] w-64 h-64 opacity-10 text-java-dark pointer-events-none">
+             <MandalaFlower className="w-full h-full animate-spin-slow-reverse" />
         </div>
       </section>
 
@@ -531,6 +594,11 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
             <p className="leading-relaxed text-base md:text-lg text-gray-700 font-sans">
                 Dengan memanjatkan puji syukur ke hadirat Allah SWT atas limpahan rahmat dan karunia-Nya, kami sekeluarga bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dalam acara Khitanan putra pertama kami:
             </p>
+            
+            {/* Decorative Divider */}
+            <div className="flex justify-center pt-4">
+                <FloralDivider className="h-8 w-48 text-java-gold" />
+            </div>
         </div>
       </section>
 
@@ -538,11 +606,6 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
       <section id="section-couple" className="py-16 md:py-24 px-6 bg-white relative overflow-hidden">
         <div className="max-w-5xl mx-auto relative z-10">
            <div className="text-center mb-10 md:mb-16">
-              {/* Lottie Divider replaces BatikDivider */}
-              <div className="w-full max-w-sm mx-auto h-20 mb-6 opacity-90">
-                 {/* @ts-ignore */}
-                 <dotlottie-player src={LINE_ORNAMENT_URL} background="transparent" speed="1" loop autoplay></dotlottie-player>
-              </div>
               <h2 className="text-3xl md:text-6xl font-script text-java-dark">{coupleSectionTitle}</h2>
            </div>
 
@@ -568,11 +631,6 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                  <p className="text-java-brown font-sans text-base md:text-lg max-w-md leading-relaxed px-4">{groomParents}</p>
                  {isKhitanan && (
                    <div className="mt-6 md:mt-8 bg-java-cream px-6 md:px-8 py-3 md:py-4 rounded-xl border border-java-gold/30 shadow-sm relative overflow-hidden">
-                     {/* Subtle floating leaves behind weton */}
-                     <div className="absolute inset-0 opacity-10 pointer-events-none">
-                         {/* @ts-ignore */}
-                         <dotlottie-player src={LOTTIE_FLOATING_LEAVES} background="transparent" speed="0.5" loop autoplay></dotlottie-player>
-                     </div>
                      <p className="text-java-gold-dark font-bold font-display italic text-lg md:text-2xl relative z-10">{aiContent?.wetonAnalysis ? aiContent.wetonAnalysis.split(':')[0] : 'Sabtu Kliwon'}</p>
                    </div>
                  )}
@@ -607,11 +665,10 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
 
       {/* --- EVENT DETAILS --- */}
       <section id="section-event" className="py-16 md:py-24 px-4 md:px-6 bg-java-dark text-white relative bg-batik-pattern bg-blend-multiply overflow-hidden">
-         {/* Lottie Overlay for Event Section */}
+         {/* SVG Overlay for Event Section */}
          <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-java-cream to-transparent z-10 opacity-10"></div>
          <div className="absolute bottom-0 right-0 w-64 h-64 opacity-20 pointer-events-none rotate-180">
-            {/* @ts-ignore */}
-            <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="0.4" loop autoplay></dotlottie-player>
+            <MandalaFlower className="w-full h-full text-java-gold animate-spin-slow" />
          </div>
 
          <div className="max-w-5xl mx-auto text-center relative z-10">
@@ -621,8 +678,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                {/* Event 1 */}
                <div className="bg-white/5 backdrop-blur-md p-8 md:p-10 rounded-3xl border border-white/20 hover:border-java-gold/60 transition-all hover:transform hover:-translate-y-2 hover:shadow-2xl hover:bg-white/10 group relative overflow-hidden">
                   <div className="absolute -top-10 -right-10 w-32 h-32 opacity-10 group-hover:opacity-20 transition-opacity">
-                     {/* @ts-ignore */}
-                     <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="1" loop autoplay></dotlottie-player>
+                     <MandalaFlower className="w-full h-full text-java-gold animate-spin-slow" />
                   </div>
 
                   <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-java-gold/10 mb-4 md:mb-6 text-java-gold group-hover:bg-java-gold group-hover:text-java-dark transition-colors relative z-10">
@@ -661,8 +717,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                {/* Event 2 */}
                <div className="bg-white/5 backdrop-blur-md p-8 md:p-10 rounded-3xl border border-white/20 hover:border-java-gold/60 transition-all hover:transform hover:-translate-y-2 hover:shadow-2xl hover:bg-white/10 group relative overflow-hidden">
                    <div className="absolute -top-10 -right-10 w-32 h-32 opacity-10 group-hover:opacity-20 transition-opacity">
-                     {/* @ts-ignore */}
-                     <dotlottie-player src={LOTTIE_SPINNING_FLOWER} background="transparent" speed="1" loop autoplay></dotlottie-player>
+                     <MandalaFlower className="w-full h-full text-java-gold animate-spin-slow" />
                   </div>
                   <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-java-gold/10 mb-4 md:mb-6 text-java-gold group-hover:bg-java-gold group-hover:text-java-dark transition-colors relative z-10">
                     <Gift size={24} className="md:w-7 md:h-7" />
@@ -859,12 +914,27 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
            </div>
 
            <div className="text-center">
-              <button 
-                onClick={handleCommentClick}
-                className="bg-java-gold hover:bg-white text-java-dark font-bold py-3 md:py-4 px-8 md:px-10 rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center gap-2 mx-auto text-sm md:text-base"
-              >
-                 <MessageCircle size={18} className="md:w-5 md:h-5" /> Kirim Ucapan
-              </button>
+              {(!isCustomGuest || !existingCommentId) ? (
+                  <button 
+                    onClick={handleCommentClick}
+                    className={`bg-java-gold hover:bg-white text-java-dark font-bold py-3 md:py-4 px-8 md:px-10 rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(212,175,55,0.3)] flex items-center gap-2 mx-auto text-sm md:text-base ${!isCustomGuest ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={!isCustomGuest}
+                  >
+                     <MessageCircle size={18} className="md:w-5 md:h-5" /> 
+                     {!isCustomGuest ? "Khusus Tamu Undangan" : "Kirim Ucapan"}
+                  </button>
+              ) : (
+                  <div className="space-y-3">
+                      <div className="text-java-gold text-sm font-bold">Anda sudah mengirimkan ucapan</div>
+                      <button 
+                        onClick={handleCommentClick}
+                        className="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-full transition-all border border-white/30 text-xs md:text-sm"
+                      >
+                         Edit Ucapan
+                      </button>
+                  </div>
+              )}
+              {!isCustomGuest && <p className="text-xs text-gray-500 mt-2">Hanya tamu dengan undangan personal yang dapat mengirim ucapan.</p>}
            </div>
         </div>
       </section>
@@ -926,7 +996,9 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                 </div>
               ) : (
                 <>
-                  <h3 className="text-xl md:text-2xl font-bold font-display text-java-dark mb-4 md:mb-6 border-b pb-4">Kirim Ucapan</h3>
+                  <h3 className="text-xl md:text-2xl font-bold font-display text-java-dark mb-4 md:mb-6 border-b pb-4">
+                      {existingCommentId ? "Edit Ucapan" : "Kirim Ucapan"}
+                  </h3>
                   <form onSubmit={handleCommentSubmit} className="space-y-4 md:space-y-5">
                      <div>
                         <label className="block text-xs font-bold text-java-brown mb-2 uppercase tracking-wider">Nama</label>
@@ -952,7 +1024,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                         />
                      </div>
                      <button type="submit" disabled={isSubmittingComment} className="w-full bg-java-dark text-white font-bold py-3 md:py-4 rounded-xl hover:bg-java-gold hover:text-java-dark transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50">
-                        <Send size={18} /> {isSubmittingComment ? 'MENGIRIM...' : 'KIRIM'}
+                        <Send size={18} /> {isSubmittingComment ? 'MENGIRIM...' : (existingCommentId ? 'UPDATE' : 'KIRIM')}
                      </button>
                   </form>
                 </>
