@@ -396,6 +396,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
     { id: 'section-home', icon: <Home size={20} />, label: 'Home' },
     { id: 'section-couple', icon: isKhitanan ? <User size={20} /> : <Heart size={20} />, label: isKhitanan ? 'Putra' : 'Couple' },
     { id: 'section-event', icon: <Calendar size={20} />, label: 'Event' },
+    { id: 'section-gift', icon: <Gift size={20} />, label: 'Gift' },
     { id: 'section-wishes', icon: <MessageCircle size={20} />, label: 'Wishes' },
   ];
 
@@ -804,7 +805,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
       )}
 
       {/* --- GIFT / DONATION --- */}
-      <section className="py-16 md:py-24 px-6 bg-white relative">
+      <section id="section-gift" className="py-16 md:py-24 px-6 bg-white relative">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
         <div className="max-w-3xl mx-auto text-center relative z-10">
            <h2 className="text-3xl md:text-4xl font-display font-bold text-java-dark mb-4 md:mb-6 tracking-wide">Tanda Kasih</h2>
