@@ -29,7 +29,7 @@ function App() {
     
     coverPhoto: 'https://images.unsplash.com/photo-1604866830893-c13cafa515d5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80', 
     // Specific photo for Narendra
-    couplePhoto: 'https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763900438094.png',
+    couplePhoto: 'https://raw.githubusercontent.com/rudisiarudin/undangan-khitanan/refs/heads/main/public/anak.jpg',
     // Specific gallery images for Narendra
     gallery: [
       "https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763901472050.png",
