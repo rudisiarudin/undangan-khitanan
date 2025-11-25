@@ -707,7 +707,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                   <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-white/10 relative z-10">
                      <p className="text-xs md:text-sm text-gray-400 mb-4 md:mb-6 leading-relaxed px-2 md:px-4">{locationAddress}</p>
                      <a 
-                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationAddress)}`}
+                       href={`https://maps.app.goo.gl/PiRCHXnWX8YB8tRj6`}
                        target="_blank" rel="noreferrer"
                        className="inline-flex items-center gap-2 text-xs font-bold text-java-dark bg-java-gold px-5 py-2.5 md:px-6 md:py-3 rounded-full hover:bg-white transition-all transform hover:scale-105"
                      >
@@ -744,7 +744,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                    <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-white/10 relative z-10">
                      <p className="text-xs md:text-sm text-gray-400 mb-4 md:mb-6 leading-relaxed px-2 md:px-4">{locationAddress}</p>
                       <a 
-                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationAddress)}`}
+                       href={`https://maps.app.goo.gl/PiRCHXnWX8YB8tRj6`}
                        target="_blank" rel="noreferrer"
                        className="inline-flex items-center gap-2 text-xs font-bold text-java-dark bg-java-gold px-5 py-2.5 md:px-6 md:py-3 rounded-full hover:bg-white transition-all transform hover:scale-105"
                      >
