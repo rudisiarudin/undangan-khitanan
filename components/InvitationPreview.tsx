@@ -483,7 +483,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   return (
     <div ref={scrollContainerRef} className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden bg-java-cream hide-scrollbar relative text-java-brown font-sans">
       {/* Audio Element - Updated to reliable direct link */}
-      <audio ref={audioRef} loop src="https://ia801302.us.archive.org/18/items/KeboGiroPengantinJawa/Kebo%20Giro%20-%20Pengantin%20Jawa.mp3" />
+      <audio ref={audioRef} loop src="https://raw.githubusercontent.com/rudisiarudin/undangan-khitanan/refs/heads/main/public/Gending%20Temanten%20Adat%20Jawa%20%20kebo%20giro.mp3" />
       
       {/* Floating Controls (Music + Fullscreen) */}
       <div className="fixed bottom-24 left-6 z-40 md:bottom-6 flex flex-col gap-3">
