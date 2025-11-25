@@ -24,7 +24,7 @@ function App() {
     secondEventDate: '2025-12-21',
     secondEventTime: '10.00 WIB',
     
-    locationName: 'Kediaman Mempelai',
+    locationName: 'Kediaman Keluarga',
     locationAddress: 'Jl. Pondok Asri Utara I No. 83, RT 04 RW 10 Pondok Gedangasri, Gedanganak, Ungaran',
     
     coverPhoto: 'https://images.unsplash.com/photo-1604866830893-c13cafa515d5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80', 
@@ -32,9 +32,10 @@ function App() {
     couplePhoto: 'https://raw.githubusercontent.com/rudisiarudin/undangan-khitanan/refs/heads/main/public/anak.jpg',
     // Specific gallery images for Narendra
     gallery: [
-      "https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763901472050.png",
-      "https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763902007340-1.png",
-      "https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763902182112.png"
+      "https://raw.githubusercontent.com/rudisiarudin/undangan-khitanan/refs/heads/main/public/galeri-1.jpg",
+      "https://raw.githubusercontent.com/rudisiarudin/undangan-khitanan/refs/heads/main/public/galeri-2.jpg",
+      "https://raw.githubusercontent.com/rudisiarudin/undangan-khitanan/refs/heads/main/public/galeri-3.jpg",
+      "https://raw.githubusercontent.com/rudisiarudin/undangan-khitanan/refs/heads/main/public/galeri-4.jpg"
     ],
     donation: { // Fallback
       bankName: 'BNI',
