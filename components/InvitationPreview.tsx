@@ -285,7 +285,13 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
             .from('comments')
             .insert([{ name: newCommentName, message: newCommentMsg }]);
 
-        if (error) throw error;
+        if (error) {
+          console.error("SUPABASE ERROR:", error);
+          if (error.code === '42501' || error.message?.includes('row-level security')) {
+             console.error("⚠️ PENTING: Anda harus mematikan RLS (Row Level Security) pada tabel 'comments' di Supabase agar data bisa tersimpan.");
+          }
+          throw error;
+        }
       } catch (err) {
         console.warn("Backend insert failed, switching to local demo mode:", err);
         // We continue to update local state anyway to satisfy the user testing
