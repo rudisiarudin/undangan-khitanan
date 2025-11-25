@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CoupleData, GeneratedContent } from '../types';
 import { BatikDivider, MandalaFlower, FloralDivider } from './Ornament';
-import { MapPin, Calendar, Heart, Music, Pause, Gift, Home, User, MessageCircle, Copy, Check, X, Send, Clock, ChevronLeft, ChevronRight, Maximize, Minimize, CheckCircle } from 'lucide-react';
+import { MapPin, Calendar, Heart, Music, Pause, Gift, Home, User, MessageCircle, Copy, Check, X, Send, Clock, ChevronLeft, ChevronRight, Maximize, Minimize, CheckCircle, Image, BookOpen, PartyPopper } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 
 const JAVA_GUNUNGAN_URL = "https://i.pinimg.com/originals/fa/31/d7/fa31d7c7845aa910ec6aed6a46f97387.png";
@@ -200,9 +201,13 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
   // Play audio when modal opens
   useEffect(() => {
     if (isOpen && audioRef.current) {
-      audioRef.current.play()
-        .then(() => setIsPlaying(true))
-        .catch(e => console.error("Autoplay prevented:", e));
+      // Use a more robust play method with error handling
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch(e => console.error("Autoplay prevented by browser policy:", e));
+      }
     }
   }, [isOpen]);
 
@@ -396,7 +401,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
     { id: 'section-home', icon: <Home size={20} />, label: 'Home' },
     { id: 'section-couple', icon: isKhitanan ? <User size={20} /> : <Heart size={20} />, label: isKhitanan ? 'Putra' : 'Couple' },
     { id: 'section-event', icon: <Calendar size={20} />, label: 'Event' },
-    { id: 'section-gift', icon: <Gift size={20} />, label: 'Gift' },
+    { id: 'section-gallery', icon: <Image size={20} />, label: 'Galeri' },
     { id: 'section-wishes', icon: <MessageCircle size={20} />, label: 'Wishes' },
   ];
 
@@ -477,8 +482,8 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
 
   return (
     <div ref={scrollContainerRef} className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden bg-java-cream hide-scrollbar relative text-java-brown font-sans">
-      {/* Audio Element - Using RAW GitHub link to fix autoplay issues */}
-      <audio ref={audioRef} loop src="https://github.com/rudisiarudin/undangan-khitanan/blob/a49e9b45db4dd5217f6c578b1d3e127609fb5185/public/Gending-Temanten-Adat-Jawa-kebo-giro.mp3?raw=true" />
+      {/* Audio Element - Updated to reliable direct link */}
+      <audio ref={audioRef} loop src="https://ia801302.us.archive.org/18/items/KeboGiroPengantinJawa/Kebo%20Giro%20-%20Pengantin%20Jawa.mp3" />
       
       {/* Floating Controls (Music + Fullscreen) */}
       <div className="fixed bottom-24 left-6 z-40 md:bottom-6 flex flex-col gap-3">
@@ -684,7 +689,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                   </div>
 
                   <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-java-gold/10 mb-4 md:mb-6 text-java-gold group-hover:bg-java-gold group-hover:text-java-dark transition-colors relative z-10">
-                    <Heart size={24} className="md:w-7 md:h-7" />
+                    <BookOpen size={24} className="md:w-7 md:h-7" />
                   </div>
                   <h3 className="text-xl md:text-3xl font-display font-bold text-white mb-2 tracking-wide relative z-10">{akadTitle}</h3>
                   <p className="text-java-gold/90 font-sans text-xs tracking-widest uppercase mb-6 md:mb-8 font-semibold relative z-10">{akadSubtitle}</p>
@@ -722,7 +727,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                      <MandalaFlower className="w-full h-full text-java-gold animate-spin-slow" />
                   </div>
                   <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-java-gold/10 mb-4 md:mb-6 text-java-gold group-hover:bg-java-gold group-hover:text-java-dark transition-colors relative z-10">
-                    <Gift size={24} className="md:w-7 md:h-7" />
+                    <PartyPopper size={24} className="md:w-7 md:h-7" />
                   </div>
                   <h3 className="text-xl md:text-3xl font-display font-bold text-white mb-2 tracking-wide relative z-10">{resepsiTitle}</h3>
                   <p className="text-java-gold/90 font-sans text-xs tracking-widest uppercase mb-6 md:mb-8 font-semibold relative z-10">{resepsiSubtitle}</p>
@@ -758,7 +763,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
 
       {/* --- GALLERY SLIDESHOW --- */}
       {gallery && gallery.length > 0 && (
-        <section className="py-16 md:py-24 px-4 md:px-6 bg-java-cream">
+        <section id="section-gallery" className="py-16 md:py-24 px-4 md:px-6 bg-java-cream">
            <div className="max-w-4xl mx-auto">
               <div className="text-center mb-8 md:mb-12">
                  <h2 className="text-3xl md:text-6xl font-script text-java-dark mb-4 md:mb-6">Galeri Momen</h2>

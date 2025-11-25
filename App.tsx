@@ -28,11 +28,13 @@ function App() {
     locationAddress: 'Jl. Pondok Asri Utara I No. 83, RT 04 RW 10 Pondok Gedangasri, Gedanganak, Ungaran',
     
     coverPhoto: 'https://images.unsplash.com/photo-1604866830893-c13cafa515d5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80', 
-    couplePhoto: '/images/anak.jpg',
+    // Specific photo for Narendra
+    couplePhoto: 'https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763900438094.png',
+    // Specific gallery images for Narendra
     gallery: [
-      "/images/galeri-1.jpg",
-      "/images/galeri-2.jpg",
-      "/images/galeri-3.jpg"
+      "https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763901472050.png",
+      "https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763902007340-1.png",
+      "https://narendra.itpalugada.com/wp-content/uploads/2025/11/generated-image-1763902182112.png"
     ],
     donation: { // Fallback
       bankName: 'BNI',
