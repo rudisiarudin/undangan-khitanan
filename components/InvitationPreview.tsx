@@ -350,6 +350,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
 
   // Custom Smooth Scroll Function
   const scrollToSection = (id: string) => {
+    setActiveSection(id); // Immediate visual feedback for the navbar
     const element = document.getElementById(id);
     const container = scrollContainerRef.current;
 
@@ -514,7 +515,7 @@ const InvitationPreview: React.FC<InvitationPreviewProps> = ({ data, aiContent, 
                     }`}
                 >
                     <span className="flex-shrink-0">{item.icon}</span>
-                    <span className={`whitespace-nowrap font-sans font-semibold text-xs md:text-sm ml-2 transition-all duration-300 ${isActive ? 'opacity-100 max-w-[100px]' : 'opacity-0 max-w-0 hidden'}`}>
+                    <span className={`whitespace-nowrap font-sans font-semibold text-xs md:text-sm transition-all duration-300 overflow-hidden ${isActive ? 'opacity-100 max-w-[100px] ml-2' : 'opacity-0 max-w-0 ml-0'}`}>
                         {item.label}
                     </span>
                 </button>
